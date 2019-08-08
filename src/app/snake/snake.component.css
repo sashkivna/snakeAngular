@@ -1,0 +1,22 @@
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+::ng-deep.row {
+  display: flex;
+}
+
+::ng-deep.snake {
+  background-color: #15ff52;
+}
+
+::ng-deep.apple {
+  background-color: red;
+}
+
+::ng-deep.cell {
+  padding: 1rem;
+  border: 1px dotted gray;
+}
