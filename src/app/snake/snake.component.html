@@ -1,11 +1,8 @@
-<!--<button id="start" (click)="startGame($event)">Start game</button>-->
-<!--<form>-->
-<!--  <input type="number" required placeholder="x side number" #x>-->
-<!--  <input type="number" required placeholder="x side number" #y>-->
-<!--  <button type="submit" (click)="drawField($event, x.value, y.value)" class="btn btn-success">Submit</button>-->
-<!--</form>-->
+<form>
+  <input type="number" required placeholder="x side number" #x value="10">
+  <input type="number" required placeholder="x side number" #y value="10">
+  <button type="submit" (click)="start($event, x.value, y.value)" class="btn btn-success">start game</button>
+</form>
 <div class="score">{{score$| async}}</div>
 
-
-<button (click)="startGame2()">start game 2</button>
 {{game$ | async | json}}
