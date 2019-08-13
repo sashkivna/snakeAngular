@@ -1,7 +1,7 @@
-import {Component} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {MovementService} from '../movement.service';
 import {fromEvent, Observable} from 'rxjs';
-import {filter} from 'rxjs/operators';
+import {distinctUntilChanged, filter, scan, startWith} from 'rxjs/operators';
 
 export enum Key {
   LEFT = 37,
@@ -27,53 +27,34 @@ export const SNAKE_START = {
   templateUrl: './snake.component.html',
   styleUrls: ['./snake.component.css']
 })
-export class SnakeComponent {
+export class SnakeComponent implements OnInit {
   rows;
-  left$;
-  up$;
-  down$;
-  right$;
-
-  constructor(private movement: MovementService) {
-  }
-
   score$ = this.movement.score$;
   game$ = this.movement.game$;
 
+  constructor(private movement: MovementService) {}
+
+  ngOnInit(): void {
+    const keyEvents: Observable<{key: number, direction: string}> = fromEvent(document, 'keydown').pipe(
+      filter((event: KeyboardEvent) => event.keyCode === (Key.LEFT || Key.UP || Key.DOWN || Key.RIGHT)),
+      startWith({key: 39, direction: DIRECTIONS[39]}),
+      scan((acc: {key: number, direction: any}, current: {key: number, direction: any}) => {
+        if (Math.abs(acc.key - current.key) === 2) {
+          return acc;
+        } else {
+          return current;
+        }
+      }),
+      distinctUntilChanged()
+    );
+
+    this.movement.getArrows(keyEvents);
+  }
+
   start($event: Event, x: string, y: string) {
     $event.preventDefault();
-    // this.drawField(x, y);
-    // this.rows = document.getElementsByClassName('row');
-    this.left$ = this.getKeydownLeft(document, Key.LEFT);
-    this.up$ = this.getKeydownUp(document, Key.UP);
-    this.down$ = this.getKeydownDown(document, Key.DOWN);
-    this.right$ = this.getKeydownRight(document, Key.RIGHT);
 
-    this.movement.startGame2(this.left$, this.down$, this.up$, this.right$, x, y);
-  }
-
-  getKeydownLeft(doc, key) {
-    return fromEvent(doc, 'keydown').pipe(
-      filter((event: KeyboardEvent) => event.keyCode === key)
-    );
-  }
-
-  getKeydownUp(doc, key) {
-    return fromEvent(doc, 'keydown').pipe(
-      filter((event: KeyboardEvent) => event.keyCode === key)
-    );
-  }
-
-  getKeydownRight(doc, key) {
-    return fromEvent(doc, 'keydown').pipe(
-      filter((event: KeyboardEvent) => event.keyCode === key)
-    );
-  }
-
-  getKeydownDown(doc, key) {
-    return fromEvent(doc, 'keydown').pipe(
-      filter((event: KeyboardEvent) => event.keyCode === key)
-    );
+    this.movement.startGame2(x, y);
   }
 
   drawField(x: string, y: string) {
