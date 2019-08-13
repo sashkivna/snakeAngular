@@ -1,14 +1,14 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, combineLatest, fromEvent, interval, merge, Observable, Subject} from 'rxjs';
-import {distinctUntilChanged, filter, map, mapTo, scan, startWith, switchMap, tap, withLatestFrom} from 'rxjs/operators';
-import {DIRECTIONS, Key, SNAKE_LENGTH, SNAKE_START} from './snake/snake.component';
+import {BehaviorSubject, combineLatest, interval, Observable, Subject} from 'rxjs';
+import {map, switchMap, tap, withLatestFrom} from 'rxjs/operators';
+import {SNAKE_LENGTH, SNAKE_START} from './snake/snake.component';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MovementService {
   score$ = new BehaviorSubject(0);
-  snakeMovement$: Observable<{ key: number; direction: { x: number; y: number } }>;
+  snakeMovement$ = new BehaviorSubject({ key: 37, direction:  {x: 0, y: 1}});
 
   snake: Array<any> = [];
   apples: Array<any> = [];
@@ -31,18 +31,15 @@ export class MovementService {
 
   move$ = this.ticks$.pipe(
     withLatestFrom(this.snake2$, this.snakeMovement$, this.apples$),
-    map(([tick, snakeArr, movement, apples]) => {
-      this.moveSnake(tick, snakeArr, movement.direction, apples);
-    })
+    map(([tick, snakeArr, movement, apples]) => this.moveSnake(tick, snakeArr, movement, apples))
   );
 
   game$ = combineLatest(
     this.move$,
     this.apples$,
-    this.snake2$,
     this.ticks$,
     this.snakeMovement$
-  );
+  ).pipe(tap(data => console.log(data)));
 
   startGame2(x: string, y: string) {
     this.apples$.next([]);
@@ -62,6 +59,7 @@ export class MovementService {
   }
 
   printSnakeAtTheBeggining(length) {
+    console.log('in snake at the beggining');
     this.snake = [];
     for (let i = 0; i < length; i++) {
       this.snake.push({x: 0, y: i});
@@ -72,6 +70,7 @@ export class MovementService {
   }
 
   generateApple() {
+    console.log('apple');
     let i = Math.floor(Math.random() * ((this.ySide - 1) + 1));
     const j = Math.floor(Math.random() * ((this.xSide - 1) + 1));
 
@@ -85,14 +84,15 @@ export class MovementService {
   }
 
   moveSnake(tick, snakeArr, direction, apples) {
+    const moveDirection = direction.direction;
     let yNext, xNext;
 
     yNext = snakeArr[snakeArr.length - 1].y;
 
     xNext = snakeArr[snakeArr.length - 1].x;
 
-    xNext += direction.x;
-    yNext += direction.y;
+    xNext += moveDirection.x;
+    yNext += moveDirection.y;
 
     if (yNext > this.ySide - 1) {
       yNext = 0;
@@ -135,7 +135,11 @@ export class MovementService {
     return snakeArr;
   }
 
-  getArrows(arrowsStream: Observable<{key: number, direction: any}>) {
-    this.snakeMovement$ = arrowsStream;
+  getArrows(arrowsStream: Observable<{key: number, direction: { x: number, y: number}}>) {
+    // @ts-ignore
+
+    arrowsStream.subscribe(
+      data => this.snakeMovement$.next(data)
+    );
   }
 }

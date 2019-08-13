@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {MovementService} from '../movement.service';
-import {fromEvent, Observable} from 'rxjs';
+import {combineLatest, fromEvent, Observable} from 'rxjs';
 import {distinctUntilChanged, filter, scan, startWith} from 'rxjs/operators';
 
 export enum Key {
@@ -29,13 +29,14 @@ export const SNAKE_START = {
 })
 export class SnakeComponent implements OnInit {
   rows;
-  keyEvents: Observable<{key: number, direction: any}>;
+  keyEvents: Observable<{key: number, direction: { x: number, y: number}}>;
   score$;
   game$;
 
   constructor(private movement: MovementService) {
     this.score$ = this.movement.score$;
     this.game$ = this.movement.game$;
+    // res = this.game$.pipe(combineLatest(this.keyEvents));
   }
 
   ngOnInit(): void {
@@ -46,7 +47,7 @@ export class SnakeComponent implements OnInit {
         if (Math.abs(acc.key - current.keyCode) === 2) {
           return acc;
         } else {
-          current = {key: current.keyCode, direction: DIRECTIONS[current.keyCode]};
+          current = {key: current.keyCode, direction: DIRECTIONS[current.keyCode]}
           return current;
         }
       }),
@@ -58,8 +59,13 @@ export class SnakeComponent implements OnInit {
 
   start($event: Event, x: string, y: string) {
     $event.preventDefault();
-
+    this.drawField(x, y);
     this.movement.startGame2(x, y);
+
+    // this.game$.subscribe( data => {
+    //   debugger;
+    //   console.log(data);
+    // });
   }
 
   drawField(x: string, y: string) {
