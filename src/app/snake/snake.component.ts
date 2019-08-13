@@ -29,26 +29,31 @@ export const SNAKE_START = {
 })
 export class SnakeComponent implements OnInit {
   rows;
-  score$ = this.movement.score$;
-  game$ = this.movement.game$;
+  keyEvents: Observable<{key: number, direction: any}>;
+  score$;
+  game$;
 
-  constructor(private movement: MovementService) {}
+  constructor(private movement: MovementService) {
+    this.score$ = this.movement.score$;
+    this.game$ = this.movement.game$;
+  }
 
   ngOnInit(): void {
-    const keyEvents: Observable<{key: number, direction: string}> = fromEvent(document, 'keydown').pipe(
-      filter((event: KeyboardEvent) => event.keyCode === (Key.LEFT || Key.UP || Key.DOWN || Key.RIGHT)),
+    this.keyEvents = fromEvent(document, 'keydown').pipe(
+      filter((event: KeyboardEvent) => (event.keyCode === Key.LEFT) || (event.keyCode === Key.UP) || (event.keyCode === Key.DOWN) || (event.keyCode === Key.RIGHT)),
       startWith({key: 39, direction: DIRECTIONS[39]}),
-      scan((acc: {key: number, direction: any}, current: {key: number, direction: any}) => {
-        if (Math.abs(acc.key - current.key) === 2) {
+      scan((acc: {key: number, direction: any}, current: any) => {
+        if (Math.abs(acc.key - current.keyCode) === 2) {
           return acc;
         } else {
+          current = {key: current.keyCode, direction: DIRECTIONS[current.keyCode]};
           return current;
         }
       }),
       distinctUntilChanged()
     );
 
-    this.movement.getArrows(keyEvents);
+    this.movement.getArrows(this.keyEvents);
   }
 
   start($event: Event, x: string, y: string) {
