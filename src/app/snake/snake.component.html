@@ -1,8 +1,14 @@
-<form>
-  <input type="number" required placeholder="x side number" #x value="10">
-  <input type="number" required placeholder="x side number" #y value="10">
-  <button type="submit" (click)="start($event, x.value, y.value)" class="btn btn-success">start game</button>
+<form [formGroup]="gameForm" (ngSubmit)="start($event)">
+  <input type="radio" value='borders' formControlName="borders">With Borders
+  <br>
+  <input type="radio" value='no-borders' formControlName="borders">Without Borders
+  <br>
+  <input type="number" required placeholder="x side number" formControlName="xSide">
+  <br>
+  <input type="number" required placeholder="x side number" formControlName="ySide">
+  <button type="submit">Submit</button>
 </form>
 <div class="score">{{score$| async}}</div>
 <br>
 {{keyEvents | async | json}}
+{{speed$ | async }}

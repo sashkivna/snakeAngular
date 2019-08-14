@@ -1,7 +1,8 @@
 import {Component, OnInit} from '@angular/core';
 import {MovementService} from '../movement.service';
-import {fromEvent, Observable} from 'rxjs';
+import {fromEvent, Observable, Subscription} from 'rxjs';
 import {distinctUntilChanged, filter, scan, startWith, tap} from 'rxjs/operators';
+import {FormControl, FormGroup} from '@angular/forms';
 
 export enum Key {
   LEFT = 37,
@@ -28,22 +29,44 @@ export const SNAKE_START = {
   styleUrls: ['./snake.component.css']
 })
 export class SnakeComponent implements OnInit {
-  rows;
+  rows: HTMLCollectionOf<Element>;
   keyEvents: Observable<{key: number, direction: { x: number, y: number}}>;
-  score$;
+  score$: Observable<number>;
   game$;
-  table;
-  tailCoordinates;
+  speed$: Observable<number>;
+  gameOver$: Observable<boolean>;
+  table: HTMLElement;
+  tailCoordinates: {x: number, y: number};
+  borders: string;
+  gameSubcription: Subscription;
+  gameForm: FormGroup;
 
   constructor(private movement: MovementService) {
     this.score$ = this.movement.score$;
     this.game$ = this.movement.game$;
-    this.game$.subscribe(
+    this.speed$ = this.movement.speed$;
+    this.gameOver$ = this.movement.gameOver$;
+    this.gameSubcription = this.game$.subscribe(
       (data) => this.drawItems(data)
+    );
+    this.gameOver$.subscribe(
+      (data) => {
+        if (data) {
+          this.gameOver();
+        }
+      }
     );
   }
 
   ngOnInit(): void {
+    this.gameForm  = new FormGroup({
+      borders: new FormControl(''),
+      xSide: new FormControl('10'),
+      ySide: new FormControl('10')
+    });
+
+    this.gameForm.patchValue({borders: 'no-borders', tc: true});
+
     this.keyEvents = fromEvent(document, 'keydown').pipe(
       filter((event: KeyboardEvent) => (event.keyCode === Key.LEFT) || (event.keyCode === Key.UP) || (event.keyCode === Key.DOWN) || (event.keyCode === Key.RIGHT)),
       startWith({key: 39, direction: DIRECTIONS[39]}),
@@ -60,10 +83,18 @@ export class SnakeComponent implements OnInit {
     );
   }
 
-  start($event: Event, x: string, y: string) {
+  start($event: Event) {
     $event.preventDefault();
+    if (!this.gameSubcription) {
+      this.gameSubcription = this.game$.subscribe(
+        (data) => this.drawItems(data)
+      );
+    }
+    const x = this.gameForm.get('xSide').value;
+    const y = this.gameForm.get('ySide').value;
+    this.borders = this.gameForm.get('borders').value;
     this.drawField(x, y);
-    this.movement.startGame2(x, y);
+    this.movement.startGame2(x, y, this.borders);
   }
 
   drawField(x: string, y: string) {
@@ -101,5 +132,13 @@ export class SnakeComponent implements OnInit {
     this.tailCoordinates = snakeArray[0];
     snakeArray.forEach(cell => this.rows[cell.x].children[cell.y].classList.add('snake'));
     apples.forEach(cell => this.rows[cell.x].children[cell.y].classList.add('apple'));
+  }
+
+  private gameOver() {
+    alert('game over');
+    this.gameSubcription.unsubscribe();
+    const elem = document.getElementsByClassName('table')[0];
+    elem.parentNode.removeChild(elem);
+    // this.table = false;
   }
 }

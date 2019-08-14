@@ -9,16 +9,17 @@ import {SNAKE_LENGTH, SNAKE_START} from './snake/snake.component';
 export class MovementService {
   score$ = new BehaviorSubject(0);
   snakeMovement$ = new BehaviorSubject({ key: 37, direction:  {x: 0, y: 1}});
-
+  speed$ = new BehaviorSubject(1000);
+  gameOver$ = new BehaviorSubject(false);
   snake: Array<any> = [];
   apples: Array<any> = [];
   xSide: number;
   ySide: number;
-  ticks$ = interval(1000);
-
+  ticks$ = interval(this.speed$.getValue());
+  bordersMode: boolean;
   apples$ = new BehaviorSubject([]);
   snake$ = new Subject();
-  eatenApple;
+  eatenApple: {x: number, y: number};
   startGame$ = new Subject();
 
   snake2$ = this.startGame$.pipe(
@@ -41,7 +42,8 @@ export class MovementService {
     this.snakeMovement$
   );
 
-  startGame2(x: string, y: string) {
+  startGame2(x: string, y: string, bordersMode: string) {
+    bordersMode === 'no-borders' ? this.bordersMode = true : this.bordersMode = false;
     this.apples$.next([]);
     this.score$.next(0);
     this.xSide = +x;
@@ -92,21 +94,50 @@ export class MovementService {
     xNext += moveDirection.x;
     yNext += moveDirection.y;
 
-    if (yNext > this.ySide - 1) {
-      yNext = 0;
+    if (this.bordersMode) {
+      if (yNext > this.ySide - 1) {
+        yNext = 0;
+      }
+
+      if (yNext < 0) {
+        yNext = this.ySide - 1;
+      }
+
+      if (xNext < 0) {
+        xNext = this.xSide - 1;
+      }
+
+      if (xNext > this.xSide - 1) {
+        xNext = 0;
+      }
+    } else {
+      if (yNext > this.ySide - 1) {
+        this.eatenApple = null;
+        this.gameOver$.next(true);
+      }
+
+      if (yNext < 0) {
+        this.eatenApple = null;
+        this.gameOver$.next(true);
+      }
+
+      if (xNext < 0) {
+        this.eatenApple = null;
+        this.gameOver$.next(true);
+      }
+
+      if (xNext > this.xSide - 1) {
+        this.eatenApple = null;
+        this.gameOver$.next(true);
+      }
     }
 
-    if (yNext < 0) {
-      yNext = this.ySide - 1;
-    }
-
-    if (xNext < 0) {
-      xNext = this.xSide - 1;
-    }
-
-    if (xNext > this.xSide - 1) {
-      xNext = 0;
-    }
+    snakeArr.forEach(cell => {
+      if (cell.x === xNext && cell.y === yNext) {
+        this.eatenApple = null;
+        this.gameOver$.next(true);
+      }
+    });
 
     snakeArr.push({x: xNext, y: yNext});
 
@@ -115,6 +146,7 @@ export class MovementService {
       apples.forEach((apple, index) => {
         if (apple.x === snakeCoord.x && apple.y === snakeCoord.y) {
           this.eatenApple = apple;
+          this.speed$.next(this.speed$.getValue() - 50);
           apples.splice(index, 1);
           newSnakeCell = true;
         }
