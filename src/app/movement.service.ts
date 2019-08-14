@@ -1,7 +1,7 @@
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, combineLatest, interval, Observable, Subject} from 'rxjs';
 import {map, switchMap, tap, withLatestFrom} from 'rxjs/operators';
-import {SNAKE_LENGTH, SNAKE_START} from './snake/snake.component';
+import {SNAKE_LENGTH, SNAKE_START} from './constants';
 
 @Injectable({
   providedIn: 'root'
@@ -43,7 +43,8 @@ export class MovementService {
   );
 
   startGame2(x: string, y: string, bordersMode: string) {
-    bordersMode === 'no-borders' ? this.bordersMode = true : this.bordersMode = false;
+    // bordersMode === 'no-borders' ? this.bordersMode = true : this.bordersMode = false;
+    this.bordersMode = bordersMode === 'no-borders';
     this.apples$.next([]);
     this.score$.next(0);
     this.xSide = +x;
