@@ -4,7 +4,5 @@
   <button type="submit" (click)="start($event, x.value, y.value)" class="btn btn-success">start game</button>
 </form>
 <div class="score">{{score$| async}}</div>
-
-{{game$ | async | json}}
 <br>
 {{keyEvents | async | json}}

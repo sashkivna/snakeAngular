@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {MovementService} from '../movement.service';
-import {combineLatest, fromEvent, Observable} from 'rxjs';
-import {distinctUntilChanged, filter, scan, startWith} from 'rxjs/operators';
+import {fromEvent, Observable} from 'rxjs';
+import {distinctUntilChanged, filter, scan, startWith, tap} from 'rxjs/operators';
 
 export enum Key {
   LEFT = 37,
@@ -32,11 +32,15 @@ export class SnakeComponent implements OnInit {
   keyEvents: Observable<{key: number, direction: { x: number, y: number}}>;
   score$;
   game$;
+  table;
+  tailCoordinates;
 
   constructor(private movement: MovementService) {
     this.score$ = this.movement.score$;
     this.game$ = this.movement.game$;
-    // res = this.game$.pipe(combineLatest(this.keyEvents));
+    this.game$.subscribe(
+      (data) => this.drawItems(data)
+    );
   }
 
   ngOnInit(): void {
@@ -47,30 +51,28 @@ export class SnakeComponent implements OnInit {
         if (Math.abs(acc.key - current.keyCode) === 2) {
           return acc;
         } else {
-          current = {key: current.keyCode, direction: DIRECTIONS[current.keyCode]}
+          current = {key: current.keyCode, direction: DIRECTIONS[current.keyCode]};
           return current;
         }
       }),
-      distinctUntilChanged()
+      distinctUntilChanged(),
+      tap((data) => this.movement.getArrows(data))
     );
-
-    this.movement.getArrows(this.keyEvents);
   }
 
   start($event: Event, x: string, y: string) {
     $event.preventDefault();
     this.drawField(x, y);
     this.movement.startGame2(x, y);
-
-    // this.game$.subscribe( data => {
-    //   debugger;
-    //   console.log(data);
-    // });
   }
 
   drawField(x: string, y: string) {
-    const table = document.createElement('div');
-    table.classList.add('table');
+    if (this.table) {
+      const elem = document.getElementsByClassName('table')[0];
+      elem.parentNode.removeChild(elem);
+    }
+    this.table = document.createElement('div');
+    this.table.classList.add('table');
     for (let i = 0; i < +x; i++) {
       const row = document.createElement('div');
       row.classList.add('row');
@@ -78,9 +80,26 @@ export class SnakeComponent implements OnInit {
         const cell = document.createElement('div');
         cell.classList.add('cell');
         row.appendChild(cell);
-        table.appendChild(row);
+        this.table.appendChild(row);
       }
     }
-    document.getElementsByTagName('app-snake')[0].appendChild(table);
+    document.getElementsByTagName('app-snake')[0].appendChild(this.table);
+
+    this.rows = document.getElementsByClassName('row');
+  }
+
+  drawItems(data) {
+    if (this.tailCoordinates) {
+      this.rows[this.tailCoordinates.x].children[this.tailCoordinates.y].classList.remove('snake');
+    }
+
+    if (this.movement.eatenApple) {
+      this.rows[this.movement.eatenApple.x].children[this.movement.eatenApple.y].classList.remove('apple');
+    }
+    const snakeArray = data[0];
+    const apples = data[1];
+    this.tailCoordinates = snakeArray[0];
+    snakeArray.forEach(cell => this.rows[cell.x].children[cell.y].classList.add('snake'));
+    apples.forEach(cell => this.rows[cell.x].children[cell.y].classList.add('apple'));
   }
 }

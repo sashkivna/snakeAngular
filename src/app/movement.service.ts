@@ -18,7 +18,7 @@ export class MovementService {
 
   apples$ = new BehaviorSubject([]);
   snake$ = new Subject();
-
+  eatenApple;
   startGame$ = new Subject();
 
   snake2$ = this.startGame$.pipe(
@@ -39,7 +39,7 @@ export class MovementService {
     this.apples$,
     this.ticks$,
     this.snakeMovement$
-  ).pipe(tap(data => console.log(data)));
+  );
 
   startGame2(x: string, y: string) {
     this.apples$.next([]);
@@ -59,7 +59,6 @@ export class MovementService {
   }
 
   printSnakeAtTheBeggining(length) {
-    console.log('in snake at the beggining');
     this.snake = [];
     for (let i = 0; i < length; i++) {
       this.snake.push({x: 0, y: i});
@@ -70,7 +69,6 @@ export class MovementService {
   }
 
   generateApple() {
-    console.log('apple');
     let i = Math.floor(Math.random() * ((this.ySide - 1) + 1));
     const j = Math.floor(Math.random() * ((this.xSide - 1) + 1));
 
@@ -116,8 +114,8 @@ export class MovementService {
     snakeArr.forEach(snakeCoord => {
       apples.forEach((apple, index) => {
         if (apple.x === snakeCoord.x && apple.y === snakeCoord.y) {
+          this.eatenApple = apple;
           apples.splice(index, 1);
-
           newSnakeCell = true;
         }
       });
@@ -137,9 +135,6 @@ export class MovementService {
 
   getArrows(arrowsStream: Observable<{key: number, direction: { x: number, y: number}}>) {
     // @ts-ignore
-
-    arrowsStream.subscribe(
-      data => this.snakeMovement$.next(data)
-    );
+    this.snakeMovement$.next(arrowsStream);
   }
 }
