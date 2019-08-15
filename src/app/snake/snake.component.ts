@@ -1,6 +1,6 @@
 import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {MovementService} from '../movement.service';
-import { fromEvent, Observable, of, Subject, Subscription } from 'rxjs';
+import {combineLatest, fromEvent, Observable, of, Subject, Subscription} from 'rxjs';
 import { distinctUntilChanged, filter, scan, startWith, switchMap, tap } from 'rxjs/operators';
 import {DIRECTIONS, Key} from '../constants';
 
@@ -49,7 +49,7 @@ export class SnakeComponent implements OnInit {
 
   drawItems$ = this.drawField$.pipe(
     switchMap((data) => this.movement.startGame2(data.x, data.y, data.borders)),
-    switchMap((data) => {
+    switchMap((data: any) => {
       console.log('never got here');
       if (this.tailCoordinates) {
         this.rows[this.tailCoordinates.x].children[this.tailCoordinates.y].classList.remove('snake');
@@ -61,8 +61,8 @@ export class SnakeComponent implements OnInit {
       const snakeArray = data[0];
       const apples = data[1];
       this.tailCoordinates = snakeArray[0];
-      snakeArray.forEach(cell => this.rows[cell.x].children[cell.y].classList.add('snake'));
-      apples.forEach(cell => this.rows[cell.x].children[cell.y].classList.add('apple'));
+      snakeArray.forEach((cell: {x: number, y: number}) => this.rows[cell.x].children[cell.y].classList.add('snake'));
+      apples.forEach((cell: {x: number, y: number}) => this.rows[cell.x].children[cell.y].classList.add('apple'));
 
       return of([]);
     })
