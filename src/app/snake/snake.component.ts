@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {MovementService} from '../movement.service';
-import {fromEvent, Observable, Subscription} from 'rxjs';
-import {distinctUntilChanged, filter, scan, startWith, tap} from 'rxjs/operators';
+import { fromEvent, Observable, of, Subject, Subscription } from 'rxjs';
+import { distinctUntilChanged, filter, scan, startWith, switchMap, tap } from 'rxjs/operators';
 import {FormControl, FormGroup} from '@angular/forms';
 import {DIRECTIONS, Key} from '../constants';
 
@@ -65,10 +65,61 @@ export class SnakeComponent implements OnInit {
     );
   }
 
+  start$ = new Subject<{x: number, y: number}>();
+  drawField$ = this.start$.pipe(
+    switchMap((x, y) => {
+      if (this.table) {
+        const elem = document.getElementsByClassName('table')[0];
+        elem.parentNode.removeChild(elem);
+      }
+      this.table = document.createElement('div');
+      this.table.classList.add('table');
+      for (let i = 0; i < +x; i++) {
+        const row = document.createElement('div');
+        row.classList.add('row');
+        for (let j = 0; j < +y; j++) {
+          const cell = document.createElement('div');
+          cell.classList.add('cell');
+          row.appendChild(cell);
+          this.table.appendChild(row);
+        }
+      }
+      document.getElementsByTagName('app-snake')[0].appendChild(this.table);
+
+      this.rows = document.getElementsByClassName('row');
+
+      return of({x, y});
+    })
+  );
+
+  drawItems$ = this.drawField$.pipe(
+    switchMap(({x, y}) => this.movement.startGame2(x, y)),
+    switchMap((data) => {
+      if (this.tailCoordinates) {
+        this.rows[this.tailCoordinates.x].children[this.tailCoordinates.y].classList.remove('snake');
+      }
+
+      if (this.movement.eatenApple) {
+        this.rows[this.movement.eatenApple.x].children[this.movement.eatenApple.y].classList.remove('apple');
+      }
+      const snakeArray = data[0];
+      const apples = data[1];
+      this.tailCoordinates = snakeArray[0];
+      snakeArray.forEach(cell => this.rows[cell.x].children[cell.y].classList.add('snake'));
+      apples.forEach(cell => this.rows[cell.x].children[cell.y].classList.add('apple'));
+    })
+  );
+
+  // game$ = ;
+
   start($event: Event) {
     $event.preventDefault();
+
+    this.start$.next();
+
     const x = this.gameForm.get('xSide').value;
     const y = this.gameForm.get('ySide').value;
+
     this.borders = this.gameForm.get('borders').value;
     this.drawField(x, y);
     this.movement.startGame2(x, y, this.borders);
@@ -125,3 +176,12 @@ export class SnakeComponent implements OnInit {
     this.table = false;
   }
 }
+
+
+
+/*
+ TODO list:
+ - вынести форму в отдельный компонент с оутпутом (startGame)
+ - drawItems сделать как обсервебл
+ - попробовать заменить создание элемента с помощью document.createElement
+*/

@@ -59,6 +59,9 @@ export class MovementService {
 
     this.generateApple();
     this.generateApple();
+
+
+    // return observable (this.move$)
   }
 
   printSnakeAtTheBeggining(length) {
