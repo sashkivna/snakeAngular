@@ -1,0 +1,10 @@
+<form [formGroup]="gameForm" (ngSubmit)="start($event)">
+  <input type="radio" value='borders' formControlName="borders">With Borders
+  <br>
+  <input type="radio" value='no-borders' formControlName="borders">Without Borders
+  <br>
+  <input type="number" required placeholder="x side number" formControlName="xSide">
+  <br>
+  <input type="number" required placeholder="x side number" formControlName="ySide">
+  <button type="submit">Submit</button>
+</form>

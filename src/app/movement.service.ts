@@ -36,14 +36,10 @@ export class MovementService {
   );
 
   game$ = combineLatest(
-    this.move$,
-    this.apples$,
-    this.ticks$,
-    this.snakeMovement$
+    this.move$
   );
 
   startGame2(x: string, y: string, bordersMode: string) {
-    // bordersMode === 'no-borders' ? this.bordersMode = true : this.bordersMode = false;
     this.bordersMode = bordersMode === 'no-borders';
     this.apples$.next([]);
     this.score$.next(0);
@@ -60,8 +56,8 @@ export class MovementService {
     this.generateApple();
     this.generateApple();
 
-
     // return observable (this.move$)
+    return this.move$;
   }
 
   printSnakeAtTheBeggining(length) {
