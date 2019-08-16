@@ -49,7 +49,8 @@ export class MovementService {
     this.generateApple();
 
     return this.ticks$.pipe(
-      withLatestFrom(this.apples$, this.snakeMovement$));
+      withLatestFrom(this.apples$, this.snakeMovement$),
+      map(([tick, data, direction]) => this.moveSnake(data, tick, direction)));
   }
 
   printSnakeAtTheBeggining(length) {
