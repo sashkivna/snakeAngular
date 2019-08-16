@@ -102,8 +102,8 @@ export class SnakeComponent implements OnInit {
     if (this.movement.eatenApple) {
       this.rows[this.movement.eatenApple.x].children[this.movement.eatenApple.y].classList.remove('apple');
     }
-    const snakeArray = this.movement.snake;
-    const apples = this.movement.apples$.getValue();
+    const snakeArray = data.value.snake;
+    const apples = data.value.apples;
     this.tailCoordinates = snakeArray[0];
     snakeArray.forEach((cell: {x: number, y: number}) => this.rows[cell.x].children[cell.y].classList.add('snake'));
     apples.forEach((cell: {x: number, y: number}) => this.rows[cell.x].children[cell.y].classList.add('apple'));

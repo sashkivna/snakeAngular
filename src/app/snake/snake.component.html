@@ -1,6 +1,8 @@
 <app-form (startData)="start($event)"></app-form>
 <div class="score">{{score$| async}}</div>
 <br>
+{{gameOver$ | async}}
 {{keyEvents | async | json}}
 {{drawItems$ | async | json}}
-<ng-template #table></ng-template>
+<ng-template  #table></ng-template>
+<div *ngIf="gameOver$ | async">GAME OVER</div>

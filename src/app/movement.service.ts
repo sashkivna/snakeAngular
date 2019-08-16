@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {BehaviorSubject, combineLatest, interval, Observable, of, Subject} from 'rxjs';
+import {BehaviorSubject, interval, Observable, of, Subject} from 'rxjs';
 import {map, tap, withLatestFrom} from 'rxjs/operators';
 import {SNAKE_LENGTH, SNAKE_START} from './constants';
 
@@ -28,6 +28,9 @@ export class MovementService {
   snake$ = new Subject();
   eatenApple: {x: number, y: number};
   startGame$ = new Subject();
+  game$ = this.ticks$.pipe(
+    withLatestFrom(this.apples$, this.snakeMovement$),
+  map(([tick, data, direction]) => this.moveSnake(data, tick, direction)));
 
   startGame(x: string, y: string, bordersMode: string) {
     console.log('game started at the server');
@@ -48,9 +51,7 @@ export class MovementService {
     this.generateApple();
     this.generateApple();
 
-    return this.ticks$.pipe(
-      withLatestFrom(this.apples$, this.snakeMovement$),
-      map(([tick, data, direction]) => this.moveSnake(data, tick, direction)));
+    return this.game$.pipe(map(() => of({apples: this.apples$.getValue(), snake: this.snake})));
   }
 
   printSnakeAtTheBeggining(length) {
