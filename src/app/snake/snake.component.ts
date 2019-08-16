@@ -32,9 +32,7 @@ export class SnakeComponent implements OnInit {
 
   drawItems$ = this.drawField$.pipe(
     switchMap((data) => this.movement.startGame(data.x, data.y, data.borders)),
-    switchMap((data: any) => {
-      return this.drawItems(data);
-    }),
+    switchMap((data) => this.drawItems(data)),
     withLatestFrom(this.movement.ticks$, this.movement.snakeMovement$),
     map(([tick, data, direction]) => this.movement.moveSnake(data, tick, direction))
   );
