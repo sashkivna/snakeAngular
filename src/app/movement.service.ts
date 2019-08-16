@@ -1,7 +1,14 @@
 import {Injectable} from '@angular/core';
 import {BehaviorSubject, combineLatest, interval, Observable, of, Subject} from 'rxjs';
-import {map, switchMap, tap, withLatestFrom} from 'rxjs/operators';
+import {map, tap, withLatestFrom} from 'rxjs/operators';
 import {SNAKE_LENGTH, SNAKE_START} from './constants';
+
+export interface Snake {
+  snake: {
+    length: number;
+    startPoint: {}
+  };
+}
 
 @Injectable({
   providedIn: 'root'
@@ -22,27 +29,8 @@ export class MovementService {
   eatenApple: {x: number, y: number};
   startGame$ = new Subject();
 
-  snake2$ = this.startGame$.pipe(
-    tap((data: {
-      snake: {
-        length: number;
-        startPoint: {}
-      }
-    }) => this.printSnakeAtTheBeggining(data.snake.length)));
-
-  move$ = this.ticks$.pipe(
-    withLatestFrom(this.snake2$, this.snakeMovement$),
-    map(([tick, snakeArr, movement]) => this.moveSnake(tick, snakeArr, movement))
-  );
-
-  game$ = combineLatest(
-    this.move$,
-    this.apples$,
-    this.ticks$,
-    this.snakeMovement$
-  );
-
-  startGame2(x: string, y: string, bordersMode: string) {
+  startGame(x: string, y: string, bordersMode: string) {
+    console.log('game started at the server');
     this.bordersMode = bordersMode === 'no-borders';
     this.apples$.next([]);
     this.score$.next(0);
@@ -55,24 +43,28 @@ export class MovementService {
         startPoint: SNAKE_START
       },
     });
+    this.printSnakeAtTheBeggining(SNAKE_LENGTH);
 
     this.generateApple();
     this.generateApple();
 
-    return this.move$;
+    return this.ticks$.pipe(
+      withLatestFrom(this.apples$, this.snakeMovement$));
   }
 
   printSnakeAtTheBeggining(length) {
-    alert('beggining of snake!');
+    console.log('printed snake at the beggining');
     this.snake = [];
     for (let i = 0; i < length; i++) {
       this.snake.push({x: 0, y: i});
     }
 
     this.snake$.next(this.snake);
+    return this.snake$;
   }
 
   generateApple() {
+    console.log('apple geenrated');
     let i = Math.floor(Math.random() * ((this.ySide - 1) + 1));
     const j = Math.floor(Math.random() * ((this.xSide - 1) + 1));
 
@@ -83,12 +75,14 @@ export class MovementService {
     });
 
     this.apples$.getValue().push({x: i, y: j});
+
+    return this.apples$;
   }
 
-  moveSnake(tick, snakeArr, direction) {
-    alert('moving');
+  moveSnake(tick, data, direction) {
     const moveDirection = direction.direction;
     let yNext, xNext;
+    const snakeArr = this.snake;
 
     yNext = snakeArr[snakeArr.length - 1].y;
 
@@ -150,8 +144,7 @@ export class MovementService {
         if (apple.x === snakeCoord.x && apple.y === snakeCoord.y) {
           this.eatenApple = apple;
           this.speed$.next(this.speed$.getValue() - 50);
-          const applesAfterEat = this.apples$.getValue().splice(index, 1);
-          this.apples$.next(applesAfterEat);
+          this.apples$.getValue().splice(index, 1);
           newSnakeCell = true;
         }
       });
@@ -165,8 +158,7 @@ export class MovementService {
     if (!newSnakeCell) {
       snakeArr.shift();
     }
-
-    return of({tick, snakeArr, direction});
+    this.snake$.next(snakeArr);
   }
 
   getArrows(arrowsStream: Observable<{key: number, direction: { x: number, y: number}}>) {

@@ -1,8 +1,8 @@
 <app-form (startData)="start($event)"></app-form>
-<div class="score">{{score$| async}}</div>
+<!--<div class="score">{{score$| async}}</div>-->
 <br>
 {{keyEvents | async | json}}
-{{speed$ | async }}
-{{drawItems$ | async }}
-<!--{{game$ | async  | json}}-->
+<!--{{speed$ | async }}-->
+{{drawItems$ | async | json}}
+<!--{{snake$ | async  | json}}-->
 <ng-template #table></ng-template>
